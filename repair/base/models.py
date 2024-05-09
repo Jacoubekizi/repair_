@@ -25,11 +25,6 @@ class CustomUser(AbstractUser):
         verbose_name = _("User")
         verbose_name_plural = _("Users")
 
-class Employee(models.Model):
-    employee = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-
-    def __str__(self) -> str:
-        return self.employee.username
 
 class VerificationCode(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
