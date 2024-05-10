@@ -163,27 +163,6 @@ class RetrieveInfoUser(GenericAPIView):
     
 
 # ----------------------------------------------------------------
-# class ListHandymanView(ListAPIView):
-#     serializer_class = HandymanSerializer
-#     queryset = Handyman.objects.all()
-#     permission_classes = [IsAuthenticated,]
-
-
-# class ListGovernorateView(ListAPIView):
-#     serializer_class = GovernorateSerializer
-#     queryset = Governorate.objects.all()
-#     permission_classes = [IsAuthenticated,]
-
-#     def get_queryset(self):
-#         governorate_with_handyman_count = Governorate.objects.annotate(handyman_count=Count('hanyman')).order_by('-handyman_count')
-#         return governorate_with_handyman_count[:6]
-    
-
-# class ListHandymanView(ListAPIView):
-#     serializer_class = HandymanSerializer
-#     queryset = Handyman.objects.all()
-#     permission_classes = [IsAuthenticated,]
-
 class listAdView(ListAPIView):
     queryset = Ad.objects.all()
     serializer_class = AdSerailizer
