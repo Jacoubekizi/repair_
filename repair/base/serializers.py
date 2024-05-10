@@ -91,17 +91,43 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.save()
         return user
     
-class HandymanSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Handyman
-        fields = '__all__'
-    
-class GovernorateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Governorate
-        fields = '__all__'
 
-class GategoriesSerializer(serializers.ModelSerializer):
+class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Gategories
+        model = Service
+        fields = ['name', 'image']
+
+
+class HandyManSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username',read_only=True)
+    phonenumber = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    services = ServiceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = HandyMan
+        fields = ['username','image','phonenumber','category', 'services','avg_rating','total_reviews','created']
+
+    def get_image(self,obj):
+        request = self.context.get('request')
+        if request and obj.user.image:
+            return request.build_absolute_uri(obj.user.image.url)
+        return None
+    
+    def get_phonenumber(self,obj):
+        return obj.user.phonenumber.as_international
+    
+# class GovernorateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Governorate
+#         fields = '__all__'
+
+# class GategoriesSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Gategories
+        # fields = '__all__'
+
+class AdSerailizer(serializers.ModelSerializer):
+    class Meta:
+        model = Ad
         fields = '__all__'

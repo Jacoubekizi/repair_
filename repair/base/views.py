@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
+from rest_framework.views import APIView
 from rest_framework.generics import *
 from .serializers import *
 from .utils import *
@@ -162,23 +163,50 @@ class RetrieveInfoUser(GenericAPIView):
     
 
 # ----------------------------------------------------------------
-class ListHandymanView(ListAPIView):
-    serializer_class = HandymanSerializer
-    queryset = Handyman.objects.all()
-    permission_classes = [IsAuthenticated,]
+# class ListHandymanView(ListAPIView):
+#     serializer_class = HandymanSerializer
+#     queryset = Handyman.objects.all()
+#     permission_classes = [IsAuthenticated,]
 
 
-class ListGovernorateView(ListAPIView):
-    serializer_class = GovernorateSerializer
-    queryset = Governorate.objects.all()
-    permission_classes = [IsAuthenticated,]
+# class ListGovernorateView(ListAPIView):
+#     serializer_class = GovernorateSerializer
+#     queryset = Governorate.objects.all()
+#     permission_classes = [IsAuthenticated,]
 
-    def get_queryset(self):
-        governorate_with_handyman_count = Governorate.objects.annotate(handyman_count=Count('hanyman')).order_by('-handyman_count')
-        return governorate_with_handyman_count[:6]
+#     def get_queryset(self):
+#         governorate_with_handyman_count = Governorate.objects.annotate(handyman_count=Count('hanyman')).order_by('-handyman_count')
+#         return governorate_with_handyman_count[:6]
     
 
-class ListHandymanView(ListAPIView):
-    serializer_class = HandymanSerializer
-    queryset = Handyman.objects.all()
+# class ListHandymanView(ListAPIView):
+#     serializer_class = HandymanSerializer
+#     queryset = Handyman.objects.all()
+#     permission_classes = [IsAuthenticated,]
+
+class listAdView(ListAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerailizer
+    # permission_classes = [IsAuthenticated,]
+
+class GetAdView(RetrieveAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerailizer
+    # permission_classes = [IsAuthenticated,]
+
+
+class ListHandyMen(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+        try:
+            handymen = HandyMan.objects.annotate(rating=Avg('review__rating')).order_by('-rating')
+            serializer = HandyManSerializer(handymen,many=True , context={"request":request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except HandyMan.DoesNotExist:
+            return Response({"error":"there are no handymen available"})
+        
+class GetHandyMan(RetrieveAPIView):
+    queryset = HandyMan.objects.all()
+    serializer_class = HandyManSerializer
     permission_classes = [IsAuthenticated,]

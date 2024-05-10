@@ -14,4 +14,9 @@ urlpatterns = [
     path('update-image/', UpdateImagteView.as_view(), name='update-image'),
     # path('update-email/', UpdateEmailView.as_view(), name='update-email'),
     path('get-info-user/', RetrieveInfoUser.as_view(), name='get-info-user'),
+
+    # ---------------------------
+    path('lsit-ad/', listAdView.as_view(), name='list-ad'),
+    path('get-ad/<str:pk>/', GetAdView.as_view(), name='git-ad'),
+
 ]
