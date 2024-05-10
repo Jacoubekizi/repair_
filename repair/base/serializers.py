@@ -90,3 +90,18 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+    
+class HandymanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Handyman
+        fields = '__all__'
+    
+class GovernorateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Governorate
+        fields = '__all__'
+
+class GategoriesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gategories
+        fields = '__all__'

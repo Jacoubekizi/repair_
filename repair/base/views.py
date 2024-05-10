@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 from rest_framework.generics import *
 from .serializers import *
 from .utils import *
@@ -158,3 +159,26 @@ class RetrieveInfoUser(GenericAPIView):
         user = CustomUser.objects.get(id=request.user.id)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+    
+
+# ----------------------------------------------------------------
+class ListHandymanView(ListAPIView):
+    serializer_class = HandymanSerializer
+    queryset = Handyman.objects.all()
+    permission_classes = [IsAuthenticated,]
+
+
+class ListGovernorateView(ListAPIView):
+    serializer_class = GovernorateSerializer
+    queryset = Governorate.objects.all()
+    permission_classes = [IsAuthenticated,]
+
+    def get_queryset(self):
+        governorate_with_handyman_count = Governorate.objects.annotate(handyman_count=Count('hanyman')).order_by('-handyman_count')
+        return governorate_with_handyman_count[:6]
+    
+
+class ListHandymanView(ListAPIView):
+    serializer_class = HandymanSerializer
+    queryset = Handyman.objects.all()
+    permission_classes = [IsAuthenticated,]
