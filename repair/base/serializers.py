@@ -117,15 +117,6 @@ class HandyManSerializer(serializers.ModelSerializer):
     def get_phonenumber(self,obj):
         return obj.user.phonenumber.as_international
     
-# class GovernorateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Governorate
-#         fields = '__all__'
-
-# class GategoriesSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Gategories
-        # fields = '__all__'
 
 class AdSerailizer(serializers.ModelSerializer):
     class Meta:
