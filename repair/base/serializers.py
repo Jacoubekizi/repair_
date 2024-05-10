@@ -90,3 +90,30 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+    
+
+
+class HandyManCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HandyManCategory
+        fields = '__all__'    
+
+
+
+class HandyManSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username',read_only=True)
+    phonenumber = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HandyMan
+        fields = ['username','image','phonenumber','category','avg_rating','total_reviews','created']
+
+    def get_image(self,obj):
+        request = self.context.get('request')
+        if request and obj.user.image:
+            return request.build_absolute_uri(obj.user.image.url)
+        return None
+    
+    def get_phonenumber(self,obj):
+        return obj.user.phonenumber.as_international

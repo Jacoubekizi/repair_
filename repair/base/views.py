@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from rest_framework.generics import *
+from rest_framework.generics import ListAPIView , UpdateAPIView ,RetrieveAPIView
 from .serializers import *
 from .utils import *
+from rest_framework.views import APIView
+from rest_framework import status
 
 
 class SignUpView(GenericAPIView):
@@ -158,3 +160,36 @@ class RetrieveInfoUser(GenericAPIView):
         user = CustomUser.objects.get(id=request.user.id)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+    
+
+
+
+
+class ListCategories(ListAPIView):
+    queryset = HandyManCategory
+    serializer_class = HandyManCategorySerializer
+
+
+
+
+
+
+class ListHandyMen(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get(self,request):
+        try:
+            handymen = HandyMan.objects.annotate(rating=Avg('review__rating')).order_by('-rating')
+            serializer = HandyManSerializer(handymen,many=True , context={"request":request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except HandyMan.DoesNotExist:
+            return Response({"error":"there are no handymen available"})
+        
+
+
+
+class GetHandyMan(RetrieveAPIView):
+    queryset = HandyMan
+    serializer_class = HandyManSerializer
+
+
