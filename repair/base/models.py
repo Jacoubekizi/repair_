@@ -13,7 +13,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(max_length=50, unique=True)
     phonenumber = PhoneNumberField(region='SY', blank = True, null = True)
     image = models.ImageField(upload_to='images/users',default='images/account. ')
-
+  
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username','phonenumber')
 
