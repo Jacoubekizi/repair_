@@ -91,17 +91,29 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.save()
         return user
     
-class HandymanSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Handyman
-        fields = '__all__'
-    
-class GovernorateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Governorate
-        fields = '__all__'
 
-class GategoriesSerializer(serializers.ModelSerializer):
+
+class HandyManCategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Gategories
-        fields = '__all__'
+        model = HandyManCategory
+        fields = '__all__'    
+
+
+
+class HandyManSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username',read_only=True)
+    phonenumber = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HandyMan
+        fields = ['username','image','phonenumber','category','avg_rating','total_reviews','created']
+
+    def get_image(self,obj):
+        request = self.context.get('request')
+        if request and obj.user.image:
+            return request.build_absolute_uri(obj.user.image.url)
+        return None
+    
+    def get_phonenumber(self,obj):
+        return obj.user.phonenumber.as_international
