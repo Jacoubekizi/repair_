@@ -47,15 +47,28 @@ class Handyman(models.Model):
     def __str__(self) -> str:
         return self.user.username
     
+
+class Service(models.Model):
+    name = models.CharField(max_length=100)
+    cover = models.ImageField(upload_to='images/service')
+    handyman = models.ManyToManyField(Handyman)
+
+    def __str__(self) -> str:
+        return f"{self.name}-{self.handyman.user.username}"
+    
 class Governorate(models.Model):
     name = models.CharField(choices=Governorate_Name)
-    handyman = models.ManyToManyField(Handyman)
+    handyman = models.ForeignKey(Handyman)
 
     def __str__(self) -> str:
         return self.name
     
 class Poster(models.Model):
-    pass
+    cover = models.ImageField(upload_to='images/poster')
+    descreption = models.TextField(blank=True, null=True)
+
+    def __str__(self) -> str:
+        return str(self.id)
 
 class Gategories(models.Model):
     name = models.CharField(max_length=100)
