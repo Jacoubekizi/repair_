@@ -44,7 +44,7 @@ ROOT_URLCONF = 'repair.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -60,6 +60,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'repair.wsgi.application'
 AUTH_USER_MODEL = 'base.CustomUser'
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+       'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+
+}
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 

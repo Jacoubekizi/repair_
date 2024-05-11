@@ -17,7 +17,7 @@ class CustomUserAdmin(UserAdmin):
          {'fields':('email','phonenumber' ,'password',)}
      ),
     ('User Information',
-        {'fields':('username', 'first_name', 'last_name')}
+        {'fields':('first_name', 'last_name')}
     ),
     ('Permissions', 
         {'fields':( 'is_staff', 'is_superuser', 'is_active', 'groups','user_permissions')}
@@ -29,7 +29,7 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {'classes':('wide',),
             'fields':(
-                'email','username', 'password1', 'password2',
+                'email', 'password1', 'password2',
             )}
             ),
         )
@@ -41,3 +41,6 @@ admin.site.register(CustomUser, CustomUserAdmin)
 
 admin.site.register(HandyManCategory)
 admin.site.register(HandyMan)
+admin.site.register(Service)
+
+admin.site.register(Cart)

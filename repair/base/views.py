@@ -22,6 +22,20 @@ class SignUpView(GenericAPIView):
         user_data = serializer.data
         return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
 
+class SignUpViewForClient(GenericAPIView):
+    
+    serializer_class  = SignUpSerializer
+    def post(self, request):
+        user_information = request.data
+        serializer = self.get_serializer(data=user_information)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user_data = serializer.data
+        user = CustomUser.objects.get(email=user_data['email'])
+        client = Client.objects.create(user=user)
+        cart = Cart.objects.create(client=client)
+        return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
+
 # class VerifyAccount(GenericAPIView):
 
 #     def post(self, request, pk):
@@ -132,25 +146,7 @@ class UpdateImagteView(GenericAPIView):
         user.image = data
         user.save()
         return Response('تم تحديث الصورة الشخصية بنجاح')
-    
-# class UpdateEmailView(GenericAPIView):
-#     permission_classes = [IsAuthenticated,]
 
-#     def put(self, request):
-#         email = request.data['email']
-#         user = CustomUser.objects.get(id=request.user.id)
-#         user.email = email
-#         user.is_verified = False
-#         user.save()
-#         existing_code = VerificationCode.objects.filter(user=user).first()
-#         if existing_code:
-#             existing_code.delete()
-#         code_verivecation = generate_code()
-#         code = VerificationCode.objects.create(user=user, code=code_verivecation)
-#         data= {'to_email':user.email, 'email_subject':'code verify for verified account','username':user.username, 'code': str(code_verivecation)}
-#         Utlil.send_email(data)
-#         return Response({'message':'تم ارسال رمز التحقق',
-#                             'user_id' : user.id})
     
 class RetrieveInfoUser(GenericAPIView):
     permission_classes = [IsAuthenticated,]
@@ -161,6 +157,18 @@ class RetrieveInfoUser(GenericAPIView):
         serializer = self.get_serializer(user)
         return Response(serializer.data)
     
+class UpdateInformationUser(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = CustomUser.objects.get(id=request.user.id)
+        data = request.data
+        user.email=data['email']
+        user.phonenumber = data['phonenumber']
+        user.last_name = data['last_name']
+        user.first_name = data['first_name']
+        user.save()
+        return Response('تم تحديث البيانات بنجاح')
 
 # ----------------------------------------------------------------
 class ListAdView(ListAPIView):
@@ -174,16 +182,40 @@ class GetAdView(RetrieveAPIView):
     # permission_classes = [IsAuthenticated,]
 
 
-class CreateHadnyMan(APIView):
+class CreateHadnyMan(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self,request):
+    def post(self, request):
         data_handyman = request.data
         serializer = HandyManSerializer(data=data_handyman,many=False , context={"request":request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+
+class AddServiceForHandyManView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        handy_man = HandyMan.objects.get(user=user)
+        for service in request.data['services']:
+            serv = Service.objects.get(id=service)
+            handy_man.services.add(serv)
+            handy_man.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class CreateServiceView(ListCreateAPIView):
+    queryset = Service.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = ServiceSerializer
+
+class GetServiceView(RetrieveAPIView):
+    queryset = Service.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = ServiceSerializer
+
 class ListHandyMen(APIView):
     permission_classes = [IsAuthenticated]
 

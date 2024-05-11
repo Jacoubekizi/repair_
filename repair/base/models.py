@@ -19,6 +19,7 @@ from django.db.models import Avg
 class CustomUser(AbstractUser):
     email = models.EmailField(max_length=50, unique=True)
     phonenumber = PhoneNumberField(region='SY')
+    username = None
     image = models.ImageField(upload_to='images/users',default='images/account')
     city = models.CharField(max_length=50, blank=True, null=True)
     long = models.CharField(max_length=10, blank=True, null=True)
@@ -28,7 +29,7 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ('phonenumber',)
 
     def __str__(self) -> str:
-        return self.username
+        return self.email
 
     class Meta:
         ordering = ['-id']
@@ -50,7 +51,6 @@ class VerificationCode(models.Model):
 
 class Client(models.Model):
     user = models.ForeignKey(CustomUser , on_delete=models.CASCADE)### or one2one field
-    name = models.CharField(max_length=100)
     # location = models.CharField(max_length=50)
 
     def __str__(self) -> str:
@@ -119,10 +119,12 @@ class CartService(models.Model):
 
 
 class Cart(models.Model):
-    services = models.ForeignKey(Service , on_delete=models.CASCADE)
+    services = models.ManyToManyField(Service)
     client = models.OneToOneField(Client , on_delete=models.CASCADE)
     # date = models.Dat
 
+    # def __str__(self) -> str:
+    #     return self.client.user.email
 
 class HandyMan(models.Model):
     user = models.OneToOneField(CustomUser , on_delete=models.CASCADE)

@@ -28,10 +28,14 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class SerializerInformation(serializers.ModelSerializer):
 
+    username = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = CustomUser
-        fields = ['email', 'username','phonenumber', 'city','image', 'long', 'lat']
+        fields = ['email','phonenumber', 'username', 'city','image', 'long', 'lat', 'first_name', 'last_name']
 
+    def get_username(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -45,8 +49,8 @@ class LoginSerializer(serializers.Serializer):
             user = authenticate(request=self.context.get('request'), username=username, password=password)
             if not user:
                 raise serializers.ValidationError("Incorrect Credentials")
-            # if not user.is_active:
-            #     raise serializers.ValidationError({'message_error':'this account is not active'})
+            if not user.is_active:
+                raise serializers.ValidationError({'message_error':'this account is not active'})
             # if not user.is_verified:
             #     raise serializers.ValidationError({'message_error':'this account is not verified'})
         else:
@@ -95,39 +99,39 @@ class ResetPasswordSerializer(serializers.Serializer):
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
-        fields = ['name', 'image']
+        fields = '__all__'
 
+
+class HandyManCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HandyManCategory
+        fields = ['name']
 
 class HandyManSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.username',read_only=True)
     phonenumber = serializers.SerializerMethodField(read_only=True)
     image = serializers.ImageField(source = 'user.image',read_only=True)
     services = ServiceSerializer(many=True, read_only=True)
+    category = HandyManCategorySerializer(read_only=True, many=True)
 
     class Meta:
         model = HandyMan
-        # fields = '__all__'
-        exclude = ['user',]
+        fields = ['name', 'phonenumber', 'image', 'services', 'category', 'avg_rating', 'total_reviews']
+        
 
-    # def get_image(self,obj):
-    #     request = self.context.get('request')
-    #     if request and obj.user.image:
-    #         return request.build_absolute_uri(obj.user.image.url)
-    #     return None
-    
     def get_phonenumber(self,obj):
         return obj.user.phonenumber.as_international
     
     def create(self, validated_data):
         request = self.context.get('request')
         categories = validated_data.pop('category')
-        print(request.user.id)
+
         user = CustomUser.objects.get(id=request.user.id)
         instance = HandyMan.objects.create(user=user, **validated_data)
         if categories is not None:
             for category in categories:
-                cat = HandyManCategory.objects.get(id=category)
-                instance.category.add(cat)
+                # cat = HandyManCategory.objects.get(id=category)
+                instance.category.add(category)
                 instance.save()
         return instance
     
