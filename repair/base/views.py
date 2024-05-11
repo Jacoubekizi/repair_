@@ -163,7 +163,7 @@ class RetrieveInfoUser(GenericAPIView):
     
 
 # ----------------------------------------------------------------
-class listAdView(ListAPIView):
+class ListAdView(ListAPIView):
     queryset = Ad.objects.all()
     serializer_class = AdSerailizer
     # permission_classes = [IsAuthenticated,]
@@ -174,10 +174,21 @@ class GetAdView(RetrieveAPIView):
     # permission_classes = [IsAuthenticated,]
 
 
+class CreateHadnyMan(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        data_handyman = request.data
+        serializer = HandyManSerializer(data=data_handyman,many=False , context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 class ListHandyMen(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self,request):
+        # return Response('sdasfasfd')
         try:
             handymen = HandyMan.objects.annotate(rating=Avg('review__rating')).order_by('-rating')
             serializer = HandyManSerializer(handymen,many=True , context={"request":request})

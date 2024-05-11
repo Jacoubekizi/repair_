@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'base',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'repair.wsgi.application'
-
+AUTH_USER_MODEL = 'base.CustomUser'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

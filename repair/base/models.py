@@ -18,11 +18,14 @@ from django.db.models import Avg
 
 class CustomUser(AbstractUser):
     email = models.EmailField(max_length=50, unique=True)
-    phonenumber = PhoneNumberField(region='SY', blank = True, null = True)
-    image = models.ImageField(upload_to='images/users',default='images/account. ')
+    phonenumber = PhoneNumberField(region='SY')
+    image = models.ImageField(upload_to='images/users',default='images/account')
+    city = models.CharField(max_length=50, blank=True, null=True)
+    long = models.CharField(max_length=10, blank=True, null=True)
+    lat = models.CharField(max_length=10, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username','phonenumber')
+    REQUIRED_FIELDS = ('phonenumber',)
 
     def __str__(self) -> str:
         return self.username
@@ -123,9 +126,8 @@ class Cart(models.Model):
 
 class HandyMan(models.Model):
     user = models.OneToOneField(CustomUser , on_delete=models.CASCADE)
-    category = models.ForeignKey(HandyManCategory , on_delete=models.CASCADE)
-    # name = models.CharField(max_length=100)
-    location = models.CharField(max_length=50)
+    category = models.ManyToManyField(HandyManCategory)
+    name = models.CharField(max_length=100)
     services = models.ManyToManyField(Service)
     created = models.DateTimeField(auto_now_add=True)
 

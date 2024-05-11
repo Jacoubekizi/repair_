@@ -3,7 +3,7 @@ from rest_framework_simplejwt import views as jwt_views
 from .views import *
 
 urlpatterns = [
-    path('auth/sigin/', SignUpView.as_view(), name='sigin'),
+    path('auth/sign-up/', SignUpView.as_view(), name='sign-up'),
     # path('auth/verify-account/<str:pk>/', VerifyAccount.as_view(), name='verify-account'),
     path('auth/login/' , LoginUser.as_view() , name="login"),
     path('auth/logout/', LogoutUser.as_view(), name='logout'),
@@ -16,7 +16,11 @@ urlpatterns = [
     path('get-info-user/', RetrieveInfoUser.as_view(), name='get-info-user'),
 
     # ---------------------------
-    path('lsit-ad/', listAdView.as_view(), name='list-ad'),
-    path('get-ad/<str:pk>/', GetAdView.as_view(), name='git-ad'),
+    path('lsit-ad/', ListAdView.as_view(), name='list-ad'),
+    path('get-ad/<str:pk>/', GetAdView.as_view(), name='get-ad'),
+    path('get-handyman/<str:pk>/', GetHandyMan.as_view(), name='get-handyman'),
+    path('list-handyman/', ListHandyMen.as_view(), name='list-handyman'),
+
+    path('create-handman/', CreateHadnyMan.as_view(), name='create-handyman')
 
 ]
