@@ -32,7 +32,6 @@ class SerializerInformation(serializers.ModelSerializer):
         model = CustomUser
         fields = ['email', 'username', 'image']
 
-
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only = True)
@@ -45,10 +44,10 @@ class LoginSerializer(serializers.Serializer):
             user = authenticate(request=self.context.get('request'), username=username, password=password)
             if not user:
                 raise serializers.ValidationError("Incorrect Credentials")
-            if not user.is_active:
-                raise serializers.ValidationError({'message_error':'this account is not active'})
-            if not user.is_verified:
-                raise serializers.ValidationError({'message_error':'this account is not verified'})
+            # if not user.is_active:
+            #     raise serializers.ValidationError({'message_error':'this account is not active'})
+            # if not user.is_verified:
+            #     raise serializers.ValidationError({'message_error':'this account is not verified'})
         else:
             raise serializers.ValidationError('Must include "username" and "password".')
 
@@ -100,6 +99,41 @@ class HandyManCategorySerializer(serializers.ModelSerializer):
 
 
 
+class AdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ad
+        fields = '__all__'    
+
+
+
+class PopularCitiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PopularCity
+        fields = '__all__' 
+
+
+
+
+class CartServiceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CartService
+        fields = ['id','service','cost','total_price']
+
+
+
+class CartSerializer(serializers.ModelSerializer):
+    service = CartServiceSerializer(many=True , read_only=True)
+    total_cart_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = ['id','service','client','total_cart_price']
+
+    def get_total_cart_price(self,obj):
+        return obj.total_cart_price
+
+
 class HandyManSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username',read_only=True)
     phonenumber = serializers.SerializerMethodField()
@@ -117,3 +151,24 @@ class HandyManSerializer(serializers.ModelSerializer):
     
     def get_phonenumber(self,obj):
         return obj.user.phonenumber.as_international
+    
+    def create(self, validated_data):
+        request = self.context.get('request')
+        categories = validated_data.pop('category')
+        print(request.user.id)
+        user = CustomUser.objects.get(id=request.user.id)
+        instance = HandyMan.objects.create(user=user, **validated_data)
+        if categories is not None:
+            for category in categories:
+                cat = HandyManCategory.objects.get(id=category)
+                instance.category.add(cat)
+                instance.save()
+        return instance
+    
+
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['id','handy_man','services','client','accepted','completed','date','time','total_cost']

@@ -4,11 +4,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from rest_framework.generics import ListAPIView , UpdateAPIView ,RetrieveAPIView
+from rest_framework.generics import ListAPIView , UpdateAPIView ,RetrieveAPIView ,DestroyAPIView
 from .serializers import *
 from .utils import *
 from rest_framework.views import APIView
 from rest_framework import status
+from .filters import *
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
+
 
 
 class SignUpView(GenericAPIView):
@@ -172,6 +176,94 @@ class ListCategories(ListAPIView):
 
 
 
+class AddServiceToCart(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self,request,service_id):
+        with transaction.atomic():
+
+            user = CustomUser.objects.get(id=3)## user = request.user
+
+            quantity = request.data.get('quantity')
+            client = Client.objects.get(user=user)##
+            cart = Cart.objects.get(client=client)
+            service = Service.objects.get(id=service_id)
+            cart_service , created = CartService.objects.get_or_create(
+                service = service.name,
+                quantity = quantity,
+                cost = service.cost
+            )
+            cart.service.add(cart_service)
+
+            serializer = CartServiceSerializer(cart_service,many=False)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+
+
+
+
+class CreateCartService(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        try:
+            client = Client.objects.get(id=1)## user = request.user
+            user_cart = Cart.objects.get(client=client)
+            service_name = request.data['service_name']
+            quantity = request.data['quantity']
+            cart_service = CartService.objects.create(
+                service = service_name,
+                quantity = quantity
+            )
+            user_cart.service.add(cart_service)
+            serializer = CartServiceSerializer(cart_service , many=False)
+            return Response(serializer.data , status=status.HTTP_200_OK)
+        except:
+            return Response({"error":"cart does not exist"})
+
+
+
+
+
+class CartServiceHandler(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def post(self,request,service_id,action):
+        try:
+            cart_service = CartService.objects.get(id=service_id)
+            if action == 'add':
+                cart_service.quantity += 1
+
+            elif action == 'sub':
+                if cart_service.quantity > 1:
+                    cart_service.quantity -= 1
+            
+            else:
+                return Response({"error":"please choose an action"})
+                
+            cart_service.save()
+            serializer = CartServiceSerializer(cart_service,many=False)
+            return Response(serializer.data , status=status.HTTP_200_OK)
+        except CartService.DoesNotExist:
+            return Response({"error":"cart service does not exist"}, status=status.HTTP_200_OK)
+
+
+
+
+class ListCartServices(APIView):
+    def get(self,request,cart_id):
+        try:
+            cart = Cart.objects.get(id=cart_id)
+            serializer = CartSerializer(cart , many=False)
+            return Response(serializer.data , status=status.HTTP_200_OK)
+        except Cart.DoesNotExist:
+            return Response({"error":"cart does not exist"} , status=status.HTTP_404_NOT_FOUND)
+
+
+
+class ListAds(ListAPIView):
+    queryset = Ad
+    serializer_class = AdSerializer
+
+
 
 
 class ListHandyMen(APIView):
@@ -188,8 +280,89 @@ class ListHandyMen(APIView):
 
 
 
+
+class CreateHadnyMan(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        data_handyman = request.data
+        serializer = HandyManSerializer(data=data_handyman,many=False , context={"request":request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+
+
+class CityHandymanCount(APIView):
+    def get(self, request):
+        handymen_by_city = HandyMan.count_handymen_by_city()
+        return Response(handymen_by_city)
+
+
 class GetHandyMan(RetrieveAPIView):
     queryset = HandyMan
     serializer_class = HandyManSerializer
 
 
+
+
+class DeleteOrder(DestroyAPIView):
+    queryset = HandyMan
+    serializer_class = HandyManSerializer
+
+
+
+class AcceptOrder(APIView):
+    def post(self,request,order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+            order.accepted = True
+            order.save()
+            serializer = OrderSerializer(many=False)
+            return Response(serializer.data , status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response({"error":"order does not exist"})
+
+
+
+class CompleteOrder(APIView):
+    def post(self,request,order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+            order.completed = True
+            order.save()
+            serializer = OrderSerializer(many=False)
+            return Response(serializer.data , status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response({"error":"order does not exist"})
+
+
+
+
+class ListOrders(GenericAPIView):
+    queryset = Order
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = OrderFilter
+
+    def get(self,request):
+        user = self.request.user
+        handyman = HandyMan.objects.get(user=user)
+        orders = Order.objects.filter(handy_man=handyman)
+        serializer = OrderSerializer(many=True)
+        return Response(serializer.data , status=status.HTTP_200_OK)
+    
+
+
+
+class ListCalenderOrders(GenericAPIView):
+    queryset = Order
+
+    def get(self,request):
+        user = self.request.user
+        handyman = HandyMan.objects.get(user=user)
+        orders = Order.objects.filter(handy_man=handyman)
+        serializer = OrderSerializer(many=True)
+        return Response(serializer.data , status=status.HTTP_200_OK)
+    
