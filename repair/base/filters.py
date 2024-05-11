@@ -5,11 +5,12 @@ from .models import *
 
 class HandyManFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name='user.username', lookup_expr='startswith')
-    location = django_filters.CharFilter(field_name='location', lookup_expr='exact')
+    city = django_filters.CharFilter(field_name='user.city', lookup_expr='exact')
+    # category = django_filters
 
     class Meta:
         model = HandyMan
-        fields = ['name','location']
+        fields = ['name','city']
 
 
 

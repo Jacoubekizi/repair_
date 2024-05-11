@@ -113,6 +113,13 @@ class PopularCitiesSerializer(serializers.ModelSerializer):
 
 
 
+class ClientSerializer(serializers.ModelSerializer):
+    # user = CustomUserSerializer(many=False , read_only=True)
+    class Meta:
+        model = Client
+        fields = ['id','user']
+
+
 
 class CartServiceSerializer(serializers.ModelSerializer):
 
@@ -128,7 +135,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ['id','service','client','total_cart_price']
+        fields = ['id','service','client','total_cart_price','date','time']
 
     def get_total_cart_price(self,obj):
         return obj.total_cart_price
@@ -169,6 +176,8 @@ class HandyManSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(many=False , read_only=True)
+
     class Meta:
         model = Order
-        fields = ['id','handy_man','services','client','accepted','completed','date','time','total_cost']
+        fields = ['id','handy_man','service','client','accepted','completed','date','time','total_cost']

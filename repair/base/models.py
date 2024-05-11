@@ -123,7 +123,9 @@ class CartService(models.Model):
 class Cart(models.Model):
     service = models.ManyToManyField(CartService,related_name='cart_services', blank=True)
     client = models.OneToOneField(Client , on_delete=models.CASCADE)
-    
+    date = models.DateField(null=True , blank=True)
+    time = models.TimeField(null=True , blank=True)
+
     @property
     def total_cart_price(self):
         total = 0
@@ -167,15 +169,34 @@ class HandyMan(models.Model):
 
 
 
+
+class OrderService(models.Model):
+    service = models.CharField(max_length=100)
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    cost = models.IntegerField(validators=[MinValueValidator(0)] , default=0)
+
+    @property
+    def total_price(self):
+        if self.cost:
+            return self.quantity * self.cost
+        else:
+            return self.cost
+
+    def __str__(self) -> str:
+        return f'{self.service} - {self.quantity}'
+
+
+
+
+
 class Order(models.Model):
     handy_man = models.ForeignKey(HandyMan , on_delete=models.CASCADE)
     client = models.ForeignKey(Client , on_delete=models.CASCADE)
-    service = models.ManyToManyField(Service)
+    service = models.ManyToManyField(OrderService , blank=True)
     accepted = models.BooleanField(default=False)
     completed = models.BooleanField(default=False)
     date = models.DateField()
     time = models.TimeField()
-
 
     @property
     def total_cost(self):
@@ -189,3 +210,15 @@ class Order(models.Model):
         return 
 
      
+
+    
+
+
+class UserNotification(models.Model):
+    user = models.ForeignKey(CustomUser , on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    content = models.CharField(max_length=200)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f'{self.user} - {self.content}'

@@ -12,6 +12,7 @@ from rest_framework import status
 from .filters import *
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
+from datetime import date
 
 
 
@@ -180,11 +181,8 @@ class AddServiceToCart(APIView):
     permission_classes = [IsAuthenticated]
     def post(self,request,service_id):
         with transaction.atomic():
-
-            user = CustomUser.objects.get(id=3)## user = request.user
-
             quantity = request.data.get('quantity')
-            client = Client.objects.get(user=user)##
+            client = Client.objects.get(user=request.user)
             cart = Cart.objects.get(client=client)
             service = Service.objects.get(id=service_id)
             cart_service , created = CartService.objects.get_or_create(
@@ -205,7 +203,7 @@ class CreateCartService(APIView):
 
     def post(self,request):
         try:
-            client = Client.objects.get(id=1)## user = request.user
+            client = Client.objects.get(user=request.user)
             user_cart = Cart.objects.get(client=client)
             service_name = request.data['service_name']
             quantity = request.data['quantity']
@@ -246,6 +244,66 @@ class CartServiceHandler(APIView):
             return Response({"error":"cart service does not exist"}, status=status.HTTP_200_OK)
 
 
+
+
+class SetDateTimeCart(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self,request):
+        with transaction.atomic():
+            try:
+                client = Client.objects.get(user=request.user)
+                cart = Cart.objects.get(client=client)
+                day = int(request.data['day'])
+                month = int(request.data['month'])
+                year = int(request.data['year']) 
+                time = request.data['time']
+
+                cart_date = date(year,month,day)
+                cart.date = cart_date
+                cart.time = time
+                cart.save()
+
+                serializer = CartSerializer(cart,many=False)
+                return Response(serializer.data , status=status.HTTP_200_OK)
+            
+            except Client.DoesNotExist or Cart.DoesNotExist:
+                return Response({"error":"client or cart does not exist"} , status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+class CreateOrder(APIView):
+    def post(self,request,handy_man_id):
+        with transaction.atomic():
+            try:
+                handy_man = HandyMan.objects.get(id=handy_man_id)
+                client = Client.objects.get(user=request.user)
+                cart = Cart.objects.get(client=client)
+
+                order = Order.objects.create(
+                    date = cart.date,
+                    time = cart.time,
+                    client = client,
+                    handy_man = handy_man,
+                )
+                for service in cart.service.all():
+                    order_service = OrderService.objects.create(
+                        service = service,
+                        quantity = service.quantity,
+                        cost = service.cost
+                    )
+                    order.service.add(order_service)
+                order.save()
+                cart.service.clear()
+                cart.date = None
+                cart.time = None
+                cart.save()
+                serializer = OrderSerializer(order , many=False)
+                return Response(serializer.data , status=status.HTTP_200_OK)
+            except:
+                return Response({"error":"an error occured"} , status=status.HTTP_404_NOT_FOUND)
 
 
 class ListCartServices(APIView):
