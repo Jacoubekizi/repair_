@@ -175,8 +175,19 @@ class HandyManSerializer(serializers.ModelSerializer):
 
 
 
+
+class OrderServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        models = OrderService
+        fields = '__all__'
+
+
+
+
+
 class OrderSerializer(serializers.ModelSerializer):
     client = ClientSerializer(many=False , read_only=True)
+    service = OrderServiceSerializer(many=True)
 
     class Meta:
         model = Order

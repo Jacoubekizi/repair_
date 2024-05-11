@@ -171,10 +171,23 @@ class RetrieveInfoUser(GenericAPIView):
 
 
 class ListCategories(ListAPIView):
-    queryset = HandyManCategory
+    queryset = HandyManCategory.objects.all()
     serializer_class = HandyManCategorySerializer
 
 
+
+
+class AssignCategory(APIView):
+    def post(self,request,category_id):
+        try:
+            category = HandyManCategory.objects.get(id=category_id)
+            handyman = HandyMan.objects.get(user=request.user)
+            handyman.category.add(category)
+            serializer = HandyManSerializer(handyman , many=False)
+            return Response(serializer.data , status=status.HTTP_200_OK)
+        
+        except HandyManCategory.DoesNotExist:
+            return Response({"error":"category does not exist"} , status=status.HTTP_404_NOT_FOUND)
 
 
 class AddServiceToCart(APIView):
@@ -318,7 +331,7 @@ class ListCartServices(APIView):
 
 
 class ListAds(ListAPIView):
-    queryset = Ad
+    queryset = Ad.objects.all()
     serializer_class = AdSerializer
 
 
@@ -367,8 +380,8 @@ class GetHandyMan(RetrieveAPIView):
 
 
 class DeleteOrder(DestroyAPIView):
-    queryset = HandyMan
-    serializer_class = HandyManSerializer
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
 
 
 
@@ -378,7 +391,7 @@ class AcceptOrder(APIView):
             order = Order.objects.get(id=order_id)
             order.accepted = True
             order.save()
-            serializer = OrderSerializer(many=False)
+            serializer = OrderSerializer(order,many=False)
             return Response(serializer.data , status=status.HTTP_200_OK)
         except Order.DoesNotExist:
             return Response({"error":"order does not exist"})
@@ -391,7 +404,7 @@ class CompleteOrder(APIView):
             order = Order.objects.get(id=order_id)
             order.completed = True
             order.save()
-            serializer = OrderSerializer(many=False)
+            serializer = OrderSerializer(order,many=False)
             return Response(serializer.data , status=status.HTTP_200_OK)
         except Order.DoesNotExist:
             return Response({"error":"order does not exist"})

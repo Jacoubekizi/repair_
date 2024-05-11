@@ -207,7 +207,7 @@ class Order(models.Model):
 
 
     def __str__(self) -> str:
-        return 
+        return f'{self.handy_man.name} - {self.client.user.username}'
 
      
 
