@@ -13,21 +13,21 @@ from django.db.models import Avg , Count
 
 class CustomUser(AbstractUser):
     email = models.EmailField(max_length=50, unique=True)
-    phonenumber = PhoneNumberField(region='SY', blank = True, null = True)
-    image = models.ImageField(upload_to='images/users',default='images/account. ')
-
-    groups = models.ManyToManyField('auth.Group', related_name='customuser_set', blank=True)
-    user_permissions = models.ManyToManyField('auth.Permission', related_name='customuser_set', blank=True)
+    phonenumber = PhoneNumberField(region='SY')
+    username = None
+    image = models.ImageField(upload_to='images/users',default='images/account')
+    city = models.CharField(max_length=50, blank=True, null=True)
+    long = models.CharField(max_length=10, blank=True, null=True)
+    lat = models.CharField(max_length=10, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username','phonenumber')
+    REQUIRED_FIELDS = ('phonenumber',)
 
     def __str__(self) -> str:
-        return self.username
+        return self.email
 
     class Meta:
         ordering = ['-id']
-
 
 
 class VerificationCode(models.Model):
@@ -36,11 +36,11 @@ class VerificationCode(models.Model):
     code = models.IntegerField(validators=[MinValueValidator(1000), MaxValueValidator(9999)])
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(default=get_expiration_time)
-    location = models.CharField(max_length=50)
 
     def __str__(self):
         return f'{self.user.username} code:{self.code}'
     
+
 
 
 
@@ -72,7 +72,7 @@ class Ad(models.Model):
 
 
 class PopularCity(models.Model):
-    description = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
 
     def __str__(self) -> str:
         return self.name
@@ -80,7 +80,7 @@ class PopularCity(models.Model):
 
 
 class Review(models.Model):
-    author = models.ForeignKey(Client , on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser , on_delete=models.CASCADE)
     handyman = models.ForeignKey('HandyMan' , on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(1) , MaxValueValidator(5)])
     text = models.TextField()

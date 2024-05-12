@@ -16,7 +16,7 @@ from datetime import date
 
 
 
-class SignUpView(GenericAPIView):
+class SignUp(GenericAPIView):
     
     serializer_class  = SignUpSerializer
     def post(self, request):
@@ -27,25 +27,25 @@ class SignUpView(GenericAPIView):
         user_data = serializer.data
         return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
 
-# class VerifyAccount(GenericAPIView):
 
-#     def post(self, request, pk):
-#         user = CustomUser.objects.filter(pk=pk).first()
-#         code = request.data['code']
-#         print(code)
-#         try:
-#             user_code = VerificationCode.objects.get(user=user)
-#             print(user_code)
-#             if user_code.code == int(code):
-#                 if timezone.now() > user_code.expires_at:
-#                     return Response("الرجاء اعادة طلب الرمز من جديد نظرا لأن الرمز المدخل انتهت صلاحيته")
-#                 user.is_verified = True
-#                 user.save()
-#                 user_code.delete()
-#                 return Response("تم تأكيد حسابك يمكنك الآن المتابعة وتسجيل الدخول")
-#         except:
-#             return Response("الرجاء اعادة طلب الرمز من جديد")
-            
+
+
+
+class SignUpClient(GenericAPIView):
+    serializer_class  = SignUpSerializer
+    
+    def post(self, request):
+        user_information = request.data
+        serializer = self.get_serializer(data=user_information)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user_data = serializer.data
+        user = CustomUser.objects.get(email=user_data['email'])
+        client = Client.objects.create(user=user)
+        cart = Cart.objects.create(client=client)
+        return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
+
+       
 
 class LoginUser(GenericAPIView):
 
@@ -60,7 +60,10 @@ class LoginUser(GenericAPIView):
         data['tokens'] = {'refresh':str(token), 'access':str(token.access_token)}
 
         return Response(data, status=status.HTTP_200_OK)
-    
+
+
+
+
 class LogoutUser(GenericAPIView):
     serializer_class = LogoutUserSerializer
     permission_classes = [IsAuthenticated]
@@ -71,6 +74,10 @@ class LogoutUser(GenericAPIView):
         serializer.save()
         return Response(status=status.HTTP_200_OK)
     
+
+
+
+
 class SendCodePassword(GenericAPIView):
     def post(self, request):
         try: 
@@ -87,7 +94,11 @@ class SendCodePassword(GenericAPIView):
                              'user_id' : user.id})
         except:
             raise serializers.ValidationError("الرجاء ادخال البريد الاكتروني بشكل صحيح")
-        
+
+
+
+
+
 class VerifyCode(GenericAPIView):
 
     def post(self, request, pk):
@@ -105,6 +116,9 @@ class VerifyCode(GenericAPIView):
                 return Response('الرمز خاطئ, يرجى إعادة إدخال الرمز بشكل صحيح')
         else:
             return Response("الرجاء اعادة طلب الرمز من جديد")
+
+
+
 
 class ResetPassword(UpdateAPIView):
     serializer_class = ResetPasswordSerializer
@@ -127,7 +141,10 @@ class ResetPassword(UpdateAPIView):
         
         else:
             return Response({'error':'ليس لديك صلاحية لتغيير كلمة المرور'})
-        
+
+
+
+
 class UpdateImagteView(GenericAPIView):
     permission_classes= [IsAuthenticated,]
 
@@ -137,27 +154,29 @@ class UpdateImagteView(GenericAPIView):
         user.image = data
         user.save()
         return Response('تم تحديث الصورة الشخصية بنجاح')
-    
-# class UpdateEmailView(GenericAPIView):
-#     permission_classes = [IsAuthenticated,]
 
-#     def put(self, request):
-#         email = request.data['email']
-#         user = CustomUser.objects.get(id=request.user.id)
-#         user.email = email
-#         user.is_verified = False
-#         user.save()
-#         existing_code = VerificationCode.objects.filter(user=user).first()
-#         if existing_code:
-#             existing_code.delete()
-#         code_verivecation = generate_code()
-#         code = VerificationCode.objects.create(user=user, code=code_verivecation)
-#         data= {'to_email':user.email, 'email_subject':'code verify for verified account','username':user.username, 'code': str(code_verivecation)}
-#         Utlil.send_email(data)
-#         return Response({'message':'تم ارسال رمز التحقق',
-#                             'user_id' : user.id})
-    
-class RetrieveInfoUser(GenericAPIView):
+
+
+
+
+class UpdateUserInfo(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = CustomUser.objects.get(id=request.user.id)
+        data = request.data
+        user.email=data['email']
+        user.phonenumber = data['phonenumber']
+        user.last_name = data['last_name']
+        user.first_name = data['first_name']
+        user.save()
+        return Response('تم تحديث البيانات بنجاح')
+
+
+
+
+
+class RetrieveUserInfo(GenericAPIView):
     permission_classes = [IsAuthenticated,]
     serializer_class = SerializerInformation
 
@@ -166,6 +185,21 @@ class RetrieveInfoUser(GenericAPIView):
         serializer = self.get_serializer(user)
         return Response(serializer.data)
     
+
+
+
+
+class ListServices(ListAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+
+
+
+
+class GetService(RetrieveAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+
 
 
 
@@ -182,12 +216,18 @@ class AssignCategory(APIView):
         try:
             category = HandyManCategory.objects.get(id=category_id)
             handyman = HandyMan.objects.get(user=request.user)
-            handyman.category.add(category)
+            if handyman.category.filter(category__name=category.name).exists():
+                handyman.category.remove(category)
+            else:
+                handyman.category.add(category)
+
             serializer = HandyManSerializer(handyman , many=False)
             return Response(serializer.data , status=status.HTTP_200_OK)
         
         except HandyManCategory.DoesNotExist:
             return Response({"error":"category does not exist"} , status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 class AddServiceToCart(APIView):
@@ -336,6 +376,12 @@ class ListAds(ListAPIView):
 
 
 
+class GetAd(ListAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+
+
+
 
 class ListHandyMen(APIView):
     # permission_classes = [IsAuthenticated]
@@ -365,16 +411,17 @@ class CreateHadnyMan(APIView):
 
 
 
+class GetHandyMan(RetrieveAPIView):
+    # permission_classes = [IsAuthenticated]
+    queryset = HandyMan
+    serializer_class = HandyManSerializer
+
+
 
 class CityHandymanCount(APIView):
     def get(self, request):
         handymen_by_city = HandyMan.count_handymen_by_city()
         return Response(handymen_by_city)
-
-
-class GetHandyMan(RetrieveAPIView):
-    queryset = HandyMan
-    serializer_class = HandyManSerializer
 
 
 
@@ -437,3 +484,17 @@ class ListCalenderOrders(GenericAPIView):
         serializer = OrderSerializer(many=True)
         return Response(serializer.data , status=status.HTTP_200_OK)
     
+
+
+class ListReviews(ListAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ReviewFilter
+
+
+
+
+class GetReview(RetrieveAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer

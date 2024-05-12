@@ -21,3 +21,14 @@ class OrderFilter(django_filters.FilterSet):
     class Meta:
         model = Order
         fields = ['accepted','completed']
+
+
+
+
+class ReviewFilter(django_filters.FilterSet):
+    username = django_filters.BooleanFilter(field_name='user__username')
+    rating = django_filters.BooleanFilter(field_name='rating')
+
+    class Meta:
+        model = Review
+        fields = ['username','rating']

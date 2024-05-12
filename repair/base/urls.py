@@ -3,8 +3,8 @@ from rest_framework_simplejwt import views as jwt_views
 from .views import *
 
 urlpatterns = [
-    path('auth/sigin/', SignUpView.as_view(), name='sigin'),
-    # path('auth/verify-account/<str:pk>/', VerifyAccount.as_view(), name='verify-account'),
+    path('auth/sign-up/', SignUp.as_view(), name='sign'),
+    path('auth/sign-up-client/', SignUpClient.as_view(), name='sign-up-client'),
     path('auth/login/' , LoginUser.as_view() , name="login"),
     path('auth/logout/', LogoutUser.as_view(), name='logout'),
     path('auth/send-code/' , SendCodePassword.as_view() , name="send-code"),
@@ -12,23 +12,35 @@ urlpatterns = [
     path('auth/reset-password/<str:user_id>/' , ResetPassword.as_view(), name='reset-password'),
     path('auth/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('update-image/', UpdateImagteView.as_view(), name='update-image'),
-    # path('update-email/', UpdateEmailView.as_view(), name='update-email'),
-    path('get-info-user/', RetrieveInfoUser.as_view(), name='get-info-user'),
+    path('get-info-user/', RetrieveUserInfo.as_view(), name='get-info-user'),
+    path('update-info-user/', UpdateUserInfo.as_view(), name='get-info-user'),
+
     path('cities/', CityHandymanCount.as_view(), name='cities'),
+    path('categories/' , ListCategories.as_view() , name="list-categories"),
+    path('list-ads/' , ListAds.as_view() , name="list-ads"),
+    path('get-ad/' , GetAd.as_view() , name="get-ads"),
+
+    path('list-services/', ListServices.as_view(), name='list-services'),
+    path('get-service/', GetService.as_view(), name='get-service'),
+
+    path('create-handyman/', CreateHadnyMan.as_view(), name='create-handyman'),
+    path('assign-category/', AssignCategory.as_view(), name='assign-category'),
+    path('list-handymen/', ListHandyMen.as_view(), name='list-handymen'),
+    path('get-handymen/<str:pk>/', GetHandyMan.as_view(), name='get-handymen'),
+
     path('cart-handler/<str:service_id>/<str:action>/', CartServiceHandler.as_view(), name='cart-handler'),
     path('add-to-cart/<str:service_id>/' , AddServiceToCart.as_view() , name="add-to-cart"),
     path('create-cart-service/' , CreateCartService.as_view() , name="create-cart-service"),
     path('list-cart-services/<str:cart_id>/' , ListCartServices.as_view() , name="list-cart-services"),
-    path('categories/' , ListCategories.as_view() , name="list-categories"),
-    path('assign-category/', AssignCategory.as_view(), name='assign-category'),
-    path('create-handyman/', CreateHadnyMan.as_view(), name='create-handyman'),
-    path('list-handymen/', ListHandyMen.as_view(), name='list-handymen'),
-    path('get-handymen/<str:pk>/', GetHandyMan.as_view(), name='get-handymen'),
+
     path('create-order/<str:handy_man_id>/' , CreateOrder.as_view() , name="create-order"),
     path('set-date-time/' , SetDateTimeCart.as_view() , name="set-date-time"),
     path('orders/' , ListOrders.as_view() , name="list-orders"),
     path('accept-order/<str:order_id>/' , AcceptOrder.as_view() , name="accept-order"),
     path('complete-order/<str:order_id>/' , CompleteOrder.as_view() , name="complete-order"),
-    path('list-ads/' , ListAds.as_view() , name="list-ads"),
+    
     path('delete-order/<str:pk>/' , DeleteOrder.as_view() , name="delete-order"),
+    path('list-reviews/' , ListReviews.as_view() , name="list-reviews"),
+    path('get-review/' , GetReview.as_view() , name="get-review"),
+
 ]

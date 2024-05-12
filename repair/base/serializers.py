@@ -92,6 +92,18 @@ class ResetPasswordSerializer(serializers.Serializer):
     
 
 
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = '__all__'    
+
+
+
+
+
+
 class HandyManCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = HandyManCategory
@@ -192,3 +204,15 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id','handy_man','service','client','accepted','completed','date','time','total_cost']
+
+
+
+    
+
+class ReviewSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source='client.user.username' , read_only=True)
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+        include = ['client_name']
