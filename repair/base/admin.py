@@ -39,8 +39,19 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 
 
+class HandyManAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user']
 admin.site.register(HandyManCategory)
-admin.site.register(HandyMan)
+admin.site.register(HandyMan, HandyManAdmin)
+admin.site.register(Client)
+admin.site.register(Ad)
+admin.site.register(Review)
+# admin.site.register(CustomUser)
 admin.site.register(Service)
-
+admin.site.register(CartService)
 admin.site.register(Cart)
+
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ['id']
+admin.site.register(Order, OrderAdmin)
+admin.site.register(OrderService)

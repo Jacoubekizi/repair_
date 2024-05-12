@@ -24,18 +24,27 @@ class SignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('confpassword', None)
         return CustomUser.objects.create(**validated_data)
+    
+    def save(self, **kwargs):
+            user = CustomUser(
+                phonenumber=self.validated_data['phonenumber'],
+                email = self.validated_data['email']
+            )
+            password = self.validated_data['password']
+            user.set_password(password)
+            user.save()
+            return user
 
 
 class SerializerInformation(serializers.ModelSerializer):
 
-    username = serializers.SerializerMethodField(read_only=True)
-
+    username = serializers.SerializerMethodField()
     class Meta:
         model = CustomUser
-        fields = ['email','phonenumber', 'username', 'city','image', 'long', 'lat', 'first_name', 'last_name']
+        fields = ['email', 'username', 'image', 'first_name', 'last_name']
 
     def get_username(self, obj):
-        return f"{obj.first_name} {obj.last_name}"
+        return f'{obj.first_name} {obj.last_name}'
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -46,6 +55,8 @@ class LoginSerializer(serializers.Serializer):
         password = data.get('password')
 
         if username and password:
+            print(username)
+            print(password)
             user = authenticate(request=self.context.get('request'), username=username, password=password)
             if not user:
                 raise serializers.ValidationError("Incorrect Credentials")
@@ -58,7 +69,6 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
-    
     
 class LogoutUserSerializer(serializers.Serializer):
     refresh = serializers.CharField()
@@ -96,19 +106,69 @@ class ResetPasswordSerializer(serializers.Serializer):
         return user
     
 
+
+
+
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
-        fields = '__all__'
+        fields = '__all__'    
+
+
+
+
 
 
 class HandyManCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = HandyManCategory
-        fields = ['name']
+        fields = '__all__'    
+
+
+
+class AdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ad
+        fields = '__all__'    
+
+
+
+class PopularCitiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PopularCity
+        fields = '__all__' 
+
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    # user = CustomUserSerializer(many=False , read_only=True)
+    class Meta:
+        model = Client
+        fields = ['id','user']
+
+
+
+class CartServiceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CartService
+        fields = ['id', 'service', 'quantity', 'cost', 'total_price']
+
+
+
+class CartSerializer(serializers.ModelSerializer):
+    service = CartServiceSerializer(many=True , read_only=True)
+    total_cart_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = ['id','service','client','total_cart_price','date','time']
+
+    def get_total_cart_price(self,obj):
+        return obj.total_cart_price
+
 
 class HandyManSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='user.username',read_only=True)
     phonenumber = serializers.SerializerMethodField(read_only=True)
     image = serializers.ImageField(source = 'user.image',read_only=True)
     services = ServiceSerializer(many=True, read_only=True)
@@ -116,7 +176,7 @@ class HandyManSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HandyMan
-        fields = ['name', 'phonenumber', 'image', 'services', 'category', 'avg_rating', 'total_reviews']
+        fields = ['name', 'city', 'phonenumber', 'image', 'services', 'category', 'avg_rating', 'total_reviews']
         
 
     def get_phonenumber(self,obj):
@@ -124,18 +184,40 @@ class HandyManSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         request = self.context.get('request')
-        categories = validated_data.pop('category')
-
+        city = validated_data.pop('city')
         user = CustomUser.objects.get(id=request.user.id)
+        user.city = city
+        user.save()
+        validated_data['city']=city
         instance = HandyMan.objects.create(user=user, **validated_data)
-        if categories is not None:
-            for category in categories:
-                # cat = HandyManCategory.objects.get(id=category)
-                instance.category.add(category)
-                instance.save()
         return instance
-    
-class AdSerailizer(serializers.ModelSerializer):
+
+
+class OrderServiceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ad
+        model = OrderService
         fields = '__all__'
+
+
+
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(many=False , read_only=True)
+    service = OrderServiceSerializer(read_only = True, many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id','handy_man','service','client','accepted','completed','date','time','total_cost']
+
+
+
+    
+
+class ReviewSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source='client.user.username' , read_only=True)
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+        include = ['client_name']
