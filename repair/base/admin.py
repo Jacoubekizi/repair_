@@ -4,6 +4,10 @@ from .forms import *
 from .models import *
 # Register your models here.
 
+
+admin.site.site_header = "Repair administration"
+admin.site.index_title = "Repair administration"
+
 class CustomUserAdmin(UserAdmin):
 
 
