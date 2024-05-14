@@ -225,5 +225,5 @@ class ReviewSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         repr = super().to_representation(instance)
         repr['user'] = f'{instance.user.first_name} {instance.user.last_name}'
-        repr['handyman'] = f'{instance.handyman.user.first_name} {instance.user.last_name}'
+        repr['handyman'] = f'{instance.handyman.user.first_name} {instance.handyman.last_name}'
         return repr
