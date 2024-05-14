@@ -176,7 +176,7 @@ class HandyManSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HandyMan
-        fields = ['name', 'city', 'phonenumber', 'image', 'services', 'category', 'avg_rating', 'total_reviews']
+        fields = ['id' ,'name', 'city', 'phonenumber', 'image', 'services', 'category', 'avg_rating', 'total_reviews']
         
 
     def get_phonenumber(self,obj):
@@ -215,9 +215,15 @@ class OrderSerializer(serializers.ModelSerializer):
     
 
 class ReviewSerializer(serializers.ModelSerializer):
-    client_name = serializers.CharField(source='client.user.username' , read_only=True)
+    # user = serializers.CharField(source='user.username' , read_only=True)
 
     class Meta:
         model = Review
         fields = '__all__'
-        include = ['client_name']
+        # include = ['client_name']
+
+    def to_representation(self, instance):
+        repr = super().to_representation(instance)
+        repr['user'] = f'{instance.user.first_name} {instance.user.last_name}'
+        repr['handyman'] = f'{instance.handyman.user.first_name} {instance.user.last_name}'
+        return repr

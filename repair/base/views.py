@@ -520,8 +520,17 @@ class ListReviews(ListAPIView):
     filterset_class = ReviewFilter
 
 
+class CreateReviewsView(GenericAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated]
 
-
+    def post(self, request, handy_man_id):
+        handy_man = HandyMan.objects.get(id=handy_man_id)
+        # client = Client.objects.get(user=request.user)
+        review = Review.objects.create(user=request.user, handyman=handy_man, rating=request.data['rating'])
+        serializer = self.get_serializer(review, many=False)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
 class GetReview(RetrieveAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer

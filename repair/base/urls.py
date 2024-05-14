@@ -42,7 +42,8 @@ urlpatterns = [
     path('complete-order/<str:order_id>/' , CompleteOrder.as_view() , name="complete-order"),
     
     path('delete-order/<str:pk>/' , DeleteOrder.as_view() , name="delete-order"),
+    path('create-reviews/<str:handy_man_id>/', CreateReviewsView.as_view(), name='create-reviews'),
     path('list-reviews/' , ListReviews.as_view() , name="list-reviews"),
-    path('get-review/' , GetReview.as_view() , name="get-review"),
+    path('get-review/<str:pk>/' , GetReview.as_view() , name="get-review"),
 
 ]

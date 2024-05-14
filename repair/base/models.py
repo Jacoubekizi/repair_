@@ -87,7 +87,6 @@ class Review(models.Model):
     user = models.ForeignKey(CustomUser , on_delete=models.CASCADE)
     handyman = models.ForeignKey('HandyMan' , on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(1) , MaxValueValidator(5)])
-    text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
