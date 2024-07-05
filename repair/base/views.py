@@ -24,7 +24,10 @@ class SignUp(GenericAPIView):
         serializer = self.get_serializer(data=user_information)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        user = CustomUser.objects.get(email=user_information['email'])
+        token = RefreshToken.for_user(user)
         user_data = serializer.data
+        user_data['tokens'] = {'refresh':str(token), 'access':str(token.access_token)}
         return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
 
 
@@ -190,6 +193,11 @@ class ListCreateServices(ListCreateAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request']=self.request
+        return context
+
 
 
 
@@ -204,8 +212,12 @@ class GetService(RetrieveAPIView):
 class ListCategories(ListAPIView):
     queryset = HandyManCategory.objects.all()
     serializer_class = HandyManCategorySerializer
+    permission_classes = [IsAuthenticated]
 
-
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request']=self.request
+        return context
 
 
 class AssignCategory(APIView):

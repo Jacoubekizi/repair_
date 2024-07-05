@@ -120,11 +120,20 @@ class ServiceSerializer(serializers.ModelSerializer):
 
 
 class HandyManCategorySerializer(serializers.ModelSerializer):
+    is_assign_for_handyman = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = HandyManCategory
         fields = '__all__'    
 
-
+    def get_is_assign_for_handyman(self, obj):
+        request = self.context.get('request')
+        handyman = HandyMan.objects.get(user=request.user)
+        print(obj)
+        if obj in handyman.category.all():
+            return True
+        else:
+            return False
 
 class AdSerializer(serializers.ModelSerializer):
     class Meta:
@@ -215,12 +224,9 @@ class OrderSerializer(serializers.ModelSerializer):
     
 
 class ReviewSerializer(serializers.ModelSerializer):
-    # user = serializers.CharField(source='user.username' , read_only=True)
-
     class Meta:
         model = Review
         fields = '__all__'
-        # include = ['client_name']
 
     def to_representation(self, instance):
         repr = super().to_representation(instance)
