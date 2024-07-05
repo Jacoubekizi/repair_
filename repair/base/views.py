@@ -225,13 +225,15 @@ class AssignCategory(APIView):
     def post(self,request,pk):
         try:
             category = HandyManCategory.objects.get(id=pk)
+            print(category)
             handyman = HandyMan.objects.get(user=request.user)
+            # if category in handyman.category.all():
             if handyman.category.filter(name=category.name).exists():
                 handyman.category.remove(category)
             else:
                 handyman.category.add(category)
 
-            serializer = HandyManSerializer(handyman , many=False)
+            serializer = HandyManSerializer(handyman , many=False, context={'request':request})
             return Response(serializer.data , status=status.HTTP_200_OK)
 
         except HandyManCategory.DoesNotExist:
@@ -249,7 +251,7 @@ class AssignService(APIView):
             else:
                 handyman.services.add(servrice)
 
-            serializer = HandyManSerializer(handyman , many=False)
+            serializer = HandyManSerializer(handyman , many=False, context={'request':request})
             return Response(serializer.data , status=status.HTTP_200_OK)
 
         except Service.DoesNotExist:

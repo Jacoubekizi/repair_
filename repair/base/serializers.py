@@ -110,12 +110,20 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class ServiceSerializer(serializers.ModelSerializer):
+    is_assign_for_handyman = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = Service
         fields = '__all__'    
 
 
-
+    def get_is_assign_for_handyman(self, obj):
+        request = self.context.get('request')
+        handyman = HandyMan.objects.get(user=request.user)
+        if obj in handyman.services.all():
+            return True
+        else:
+            return False
 
 
 
