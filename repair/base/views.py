@@ -201,9 +201,14 @@ class ListCreateServices(ListCreateAPIView):
 
 
 
-class GetInfoHandyman(RetrieveAPIView):
-    queryset = HandyMan.objects.all()
+class GetInfoHandyman(GenericAPIView):
+    permission_classes = [IsAuthenticated,]
     serializer_class = InfoHandymanSerializer
+
+    def get(self, request):
+        handyman = HandyMan.objects.get(user=request.user)
+        serializer = self.get_serializer(handyman)
+        return Response(serializer.data)
 
 class GetService(RetrieveAPIView):
     queryset = Service.objects.all()
