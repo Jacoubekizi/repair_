@@ -41,10 +41,21 @@ class SerializerInformation(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
     class Meta:
         model = CustomUser
-        fields = ['email', 'username', 'image', 'first_name', 'last_name']
+        fields = ['email', 'city', 'phonenumber', 'username', 'image', 'first_name', 'last_name']
 
     def get_username(self, obj):
         return f'{obj.first_name} {obj.last_name}'
+
+
+class InfoHandymanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HandyMan
+        fileds = ['city', 'name', 'user']
+
+    def to_representation(self, instance):
+        repr = super().to_representation(instance)
+        repr['phonenumber'] = instance.user.phonenumber
+        return repr
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()

@@ -201,6 +201,10 @@ class ListCreateServices(ListCreateAPIView):
 
 
 
+class GetInfoHandyman(RetrieveAPIView):
+    queryset = HandyMan.objects.all()
+    serializer_class = InfoHandymanSerializer
+
 class GetService(RetrieveAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer

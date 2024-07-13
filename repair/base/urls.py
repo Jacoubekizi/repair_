@@ -28,6 +28,7 @@ urlpatterns = [
     path('list-handymen/', ListHandyMen.as_view(), name='list-handymen'),
     path('get-handymen/<str:pk>/', GetHandyMan.as_view(), name='get-handymen'),
     path('assign-service/<str:pk>/', AssignService.as_view(), name='assign-service'),
+    path('get-info-handyman/', GetInfoHandyman.as_view(), name='get-info-handyman'),
 
     path('cart-handler/<str:service_id>/<str:action>/', CartServiceHandler.as_view(), name='cart-handler'),
     path('add-to-cart/<str:service_id>/' , AddServiceToCart.as_view() , name="add-to-cart"),
