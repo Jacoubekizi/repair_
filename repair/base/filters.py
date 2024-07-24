@@ -15,8 +15,8 @@ class HandyManFilter(django_filters.FilterSet):
 
 
 class OrderFilter(django_filters.FilterSet):
-    accepted = django_filters.BooleanFilter(field_name='accepted')
-    completed = django_filters.BooleanFilter(field_name='completed')
+    accepted = django_filters.BooleanFilter(field_name='accepted', lookup_expr='exact')
+    completed = django_filters.BooleanFilter(field_name='completed', lookup_expr='exact')
 
     class Meta:
         model = Order

@@ -285,6 +285,7 @@ class AddServiceToCart(APIView):
             return Response(serializer.data,status=status.HTTP_200_OK)
 
 
+ 
 
 
 class CreateCartService(APIView):
@@ -447,6 +448,18 @@ class ListHandyMen(APIView):
             return Response({"error":"there are no handymen available"})
         
 
+class HandymanForCategory(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, category_id):
+        try:
+            category = HandyManCategory.objects.get(id=category_id)
+            handyman = category.handyman_set.all()
+            serializer = HandyManSerializer(handyman,many=True , context={"request":request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except :
+            return Response({"error":"there are no handymen available"})
+        
 
 class CreateHadnyMan(GenericAPIView):
     permission_classes = [IsAuthenticated]

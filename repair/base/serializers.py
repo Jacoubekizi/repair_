@@ -47,16 +47,6 @@ class SerializerInformation(serializers.ModelSerializer):
         return f'{obj.first_name} {obj.last_name}'
 
 
-class InfoHandymanSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HandyMan
-        fileds = ['city', 'name', 'user']
-
-    def to_representation(self, instance):
-        repr = super().to_representation(instance)
-        repr['phonenumber'] = instance.user.phonenumber
-        return repr
-
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only = True)
@@ -252,3 +242,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         repr['user'] = f'{instance.user.first_name} {instance.user.last_name}'
         repr['handyman'] = f'{instance.handyman.user.first_name} {instance.handyman.last_name}'
         return repr
+    
+
+class InfoHandymanSerializer(serializers.ModelSerializer):
+    phonenumber = serializers.SerializerMethodField(read_only=True)
+    services = ServiceSerializer(read_only=True)
+    class Meta:
+        model = HandyMan
+        fields = ['city', 'name', 'services', 'phonenumber']
+
+    def get_phonenumber(self,obj):
+        return obj.user.phonenumber.as_international

@@ -30,6 +30,8 @@ urlpatterns = [
     path('assign-service/<str:pk>/', AssignService.as_view(), name='assign-service'),
     path('get-info-handyman/', GetInfoHandyman.as_view(), name='get-info-handyman'),
 
+    path('handyman-for-category/<str:category_id>/', HandymanForCategory.as_view(), name='handyman-for-category'),
+
     path('cart-handler/<str:service_id>/<str:action>/', CartServiceHandler.as_view(), name='cart-handler'),
     path('add-to-cart/<str:service_id>/' , AddServiceToCart.as_view() , name="add-to-cart"),
     path('create-cart-service/' , CreateCartService.as_view() , name="create-cart-service"),
