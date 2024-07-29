@@ -9,8 +9,10 @@ from .utils import *
 # from firebase_admin.messaging import Notification as FirebaseNotification
 from django.db.models import Avg , Count
 
-
-
+UserType = (
+    ('client', 'client'),
+    ('handyman', 'handyman')
+)
 
 class CustomUser(AbstractUser):
     email = models.EmailField(max_length=50, unique=True)
@@ -20,6 +22,7 @@ class CustomUser(AbstractUser):
     city = models.CharField(max_length=50, blank=True, null=True)
     long = models.CharField(max_length=10, blank=True, null=True)
     lat = models.CharField(max_length=10, blank=True, null=True)
+    usertype = models.CharField(max_length=20, choices=UserType, default='client')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('phonenumber',)
@@ -33,7 +36,6 @@ class CustomUser(AbstractUser):
     class Meta:
         ordering = ['-id']
 
-
 class VerificationCode(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     is_verified = models.BooleanField(default=False)
@@ -43,10 +45,6 @@ class VerificationCode(models.Model):
 
     def __str__(self):
         return f'{self.user.username} code:{self.code}'
-    
-
-
-
 
 class Client(models.Model):
     user = models.OneToOneField(CustomUser , on_delete=models.CASCADE)### or one2one field
@@ -54,34 +52,27 @@ class Client(models.Model):
     def __str__(self) -> str:
         return f'{self.user.first_name}-{self.user.last_name}'
 
-
 class HandyManCategory(models.Model):
     name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='images/category' , default='images/default.png')
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return self.name
 
-
-
 class Ad(models.Model):
-    image = models.ImageField(upload_to='')
+    image = models.ImageField(upload_to='images/Ad' , default='images/default.png')
     description = models.CharField(max_length=50)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return self.description
 
-
-
-
 class PopularCity(models.Model):
     name = models.CharField(max_length=50)
 
     def __str__(self) -> str:
         return self.name
-
-
 
 class Review(models.Model):
     user = models.ForeignKey(CustomUser , on_delete=models.CASCADE)
@@ -90,9 +81,7 @@ class Review(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f'{self.author} : {self.rating}'
-
-
+        return f'{self.handyman.name} : {self.rating}'
 
 class Service(models.Model):
     name = models.CharField(max_length=50)
@@ -101,10 +90,6 @@ class Service(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
-
-
-
 
 class CartService(models.Model):
     service = models.CharField(max_length=100)
@@ -120,8 +105,6 @@ class CartService(models.Model):
 
     def __str__(self) -> str:
         return f'{self.service} - {self.quantity}'
-
-
 
 class Cart(models.Model):
     service = models.ManyToManyField(CartService,related_name='cart_services', blank=True)
@@ -143,9 +126,6 @@ class Cart(models.Model):
     def __str__(self) -> str:
         return f'{self.client.user.first_name}-{self.client.user.last_name} - cart'
 
-
-
-
 class HandyMan(models.Model):
     user = models.OneToOneField(CustomUser , on_delete=models.CASCADE)
     category = models.ManyToManyField(HandyManCategory)
@@ -157,7 +137,7 @@ class HandyMan(models.Model):
     @property
     def avg_rating(self):
         return self.review_set.only('rating').aggregate(Avg('rating'))['rating__avg']
-    
+
     @property
     def total_reviews(self):
         return self.review_set.count()
@@ -168,10 +148,6 @@ class HandyMan(models.Model):
 
     def __str__(self) -> str:
         return self.name
-    
-
-
-
 
 class OrderService(models.Model):
     service = models.CharField(max_length=100)
@@ -187,10 +163,6 @@ class OrderService(models.Model):
 
     def __str__(self) -> str:
         return f'{self.service} - {self.quantity}'
-
-
-
-
 
 class Order(models.Model):
     handy_man = models.ForeignKey(HandyMan , on_delete=models.CASCADE)
@@ -211,11 +183,6 @@ class Order(models.Model):
 
     def __str__(self) -> str:
         return f'{self.handy_man.name} - {self.client.user.username}'
-
-     
-
-    
-
 
 class UserNotification(models.Model):
     user = models.ForeignKey(CustomUser , on_delete=models.CASCADE)

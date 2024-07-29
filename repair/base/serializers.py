@@ -24,7 +24,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('confpassword', None)
         return CustomUser.objects.create(**validated_data)
-    
+
     def save(self, **kwargs):
             user = CustomUser(
                 phonenumber=self.validated_data['phonenumber'],
@@ -70,14 +70,14 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
-    
+
 class LogoutUserSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
     def validate(self, attrs):
         self.token = attrs['refresh']
         return attrs
-    
+
     def save(self, **kwargs):
         try:
             RefreshToken(self.token).blacklist()
@@ -95,7 +95,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         validate_password(newpassword)
         if password != newpassword:
             raise serializers.ValidationError('كلمات المرور غير متطابقة')
-        
+
         return attrs
 
     def save(self, **kwargs):
@@ -105,17 +105,17 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
-    
+
 
 
 
 
 class ServiceSerializer(serializers.ModelSerializer):
     is_assign_for_handyman = serializers.SerializerMethodField(read_only=True)
-    
+
     class Meta:
         model = Service
-        fields = '__all__'    
+        fields = '__all__'
 
 
     def get_is_assign_for_handyman(self, obj):
@@ -133,7 +133,7 @@ class HandyManCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HandyManCategory
-        fields = '__all__'    
+        fields = '__all__'
 
     def get_is_assign_for_handyman(self, obj):
         request = self.context.get('request')
@@ -147,14 +147,14 @@ class HandyManCategorySerializer(serializers.ModelSerializer):
 class AdSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ad
-        fields = '__all__'    
+        fields = '__all__'
 
 
 
 class PopularCitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PopularCity
-        fields = '__all__' 
+        fields = '__all__'
 
 
 
@@ -195,11 +195,11 @@ class HandyManSerializer(serializers.ModelSerializer):
     class Meta:
         model = HandyMan
         fields = ['id' ,'name', 'city', 'phonenumber', 'image', 'services', 'category', 'avg_rating', 'total_reviews']
-        
+
 
     def get_phonenumber(self,obj):
         return obj.user.phonenumber.as_international
-    
+
     def create(self, validated_data):
         request = self.context.get('request')
         city = validated_data.pop('city')
@@ -230,7 +230,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 
-    
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
@@ -240,9 +240,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         repr = super().to_representation(instance)
         repr['user'] = f'{instance.user.first_name} {instance.user.last_name}'
+        repr['handyman'] = f'{instance.handyman.user.first_name} {instance.handyman.user.last_name}'
         repr['handyman'] = f'{instance.handyman.user.first_name} {instance.handyman.last_name}'
         return repr
-    
+
 
 class InfoHandymanSerializer(serializers.ModelSerializer):
     phonenumber = serializers.SerializerMethodField(read_only=True)

@@ -17,7 +17,7 @@ from datetime import date
 
 
 class SignUp(GenericAPIView):
-    
+
     serializer_class  = SignUpSerializer
     def post(self, request):
         user_information = request.data
@@ -25,9 +25,12 @@ class SignUp(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         user = CustomUser.objects.get(email=user_information['email'])
+        user.usertype = 'handyman'
+        user.save()
         token = RefreshToken.for_user(user)
         user_data = serializer.data
         user_data['tokens'] = {'refresh':str(token), 'access':str(token.access_token)}
+        user_data['user_type'] = user.usertype
         return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
 
 
@@ -36,7 +39,7 @@ class SignUp(GenericAPIView):
 
 class SignUpClient(GenericAPIView):
     serializer_class  = SignUpSerializer
-    
+
     def post(self, request):
         user_information = request.data
         serializer = self.get_serializer(data=user_information)
@@ -44,11 +47,16 @@ class SignUpClient(GenericAPIView):
         serializer.save()
         user_data = serializer.data
         user = CustomUser.objects.get(email=user_data['email'])
+        user.usertype = 'client'
+        user.save()
         client = Client.objects.create(user=user)
         cart = Cart.objects.create(client=client)
+        token = RefreshToken.for_user(user)
+        user_data['tokens'] = {'refresh':str(token), 'access':str(token.access_token)}
+        user_data['user_type'] = user.usertype
         return Response({'information_user':user_data}, status=status.HTTP_201_CREATED)
 
-       
+
 
 class LoginUser(GenericAPIView):
 
@@ -61,8 +69,14 @@ class LoginUser(GenericAPIView):
         data['image'] = request.build_absolute_uri(user.image.url)
         data['id'] = user.id
         data['tokens'] = {'refresh':str(token), 'access':str(token.access_token)}
-
-        return Response(data, status=status.HTTP_200_OK)
+        data['user_type'] = user.usertype
+        try:
+            client = Client.objects.get(user=user)
+            cart = Cart.objects.get(client=client)
+            data['cart'] = cart.id
+            return Response(data, status=status.HTTP_200_OK)
+        except:
+            return Response(data, status=status.HTTP_200_OK)
 
 
 
@@ -76,14 +90,14 @@ class LogoutUser(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK)
-    
+
 
 
 
 
 class SendCodePassword(GenericAPIView):
     def post(self, request):
-        try: 
+        try:
             email = request.data['email']
             user = get_object_or_404(CustomUser, email=email)
             existing_code = VerificationCode.objects.filter(user=user).first()
@@ -141,7 +155,7 @@ class ResetPassword(UpdateAPIView):
                 'message':'تم تغيير كلمة المرور بنجاح'
             }
             return Response(messages, status=status.HTTP_200_OK)
-        
+
         else:
             return Response({'error':'ليس لديك صلاحية لتغيير كلمة المرور'})
 
@@ -184,7 +198,7 @@ class RetrieveUserInfo(GenericAPIView):
         user = CustomUser.objects.get(id=request.user.id)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
-    
+
 
 
 
@@ -236,7 +250,6 @@ class AssignCategory(APIView):
             category = HandyManCategory.objects.get(id=pk)
             print(category)
             handyman = HandyMan.objects.get(user=request.user)
-            # if category in handyman.category.all():
             if handyman.category.filter(name=category.name).exists():
                 handyman.category.remove(category)
             else:
@@ -285,7 +298,7 @@ class AddServiceToCart(APIView):
             return Response(serializer.data,status=status.HTTP_200_OK)
 
 
- 
+
 
 
 class CreateCartService(APIView):
@@ -334,10 +347,10 @@ class CartServiceHandler(APIView):
             elif action == 'sub':
                 if cart_service.quantity > 1:
                     cart_service.quantity -= 1
-            
+
             else:
                 return Response({"error":"please choose an action"})
-                
+
             cart_service.save()
             serializer = CartServiceSerializer(cart_service,many=False)
             return Response(serializer.data , status=status.HTTP_200_OK)
@@ -357,7 +370,7 @@ class SetDateTimeCart(APIView):
                 cart = Cart.objects.get(client=client)
                 day = int(request.data['day'])
                 month = int(request.data['month'])
-                year = int(request.data['year']) 
+                year = int(request.data['year'])
                 time = request.data['time']
 
                 cart_date = date(year,month,day)
@@ -367,7 +380,7 @@ class SetDateTimeCart(APIView):
 
                 serializer = CartSerializer(cart,many=False)
                 return Response(serializer.data , status=status.HTTP_200_OK)
-            
+
             except Client.DoesNotExist or Cart.DoesNotExist:
                 return Response({"error":"client or cart does not exist"} , status=status.HTTP_404_NOT_FOUND)
 
@@ -380,7 +393,7 @@ class CreateOrder(APIView):
     def post(self,request,handy_man_id):
         with transaction.atomic():
             try:
-                
+
                 handy_man = HandyMan.objects.get(id=handy_man_id)
                 client = Client.objects.get(user=request.user)
                 cart = Cart.objects.get(client=client)
@@ -446,7 +459,7 @@ class ListHandyMen(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except HandyMan.DoesNotExist:
             return Response({"error":"there are no handymen available"})
-        
+
 
 class HandymanForCategory(APIView):
     permission_classes = [IsAuthenticated]
@@ -459,7 +472,7 @@ class HandymanForCategory(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except :
             return Response({"error":"there are no handymen available"})
-        
+
 
 class CreateHadnyMan(GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -501,6 +514,12 @@ class AcceptOrder(APIView):
             order.accepted = True
             order.save()
             serializer = OrderSerializer(order,many=False)
+
+            # handle send email
+            user = order.client.user
+            username = user.first_name + user.last_name
+            data= {'to_email':user.email, 'email_subject':"قبول الطلب",'username':username,'content':f'عزيزي المستخدم تم قبول طلبك ستأتي ورشة الإصلاح إليك في تاريخ {order.date} الساعة {order.time}'}
+            Utlil.send_email_accept(data)
             return Response(serializer.data , status=status.HTTP_200_OK)
         except Order.DoesNotExist:
             return Response({"error":"order does not exist"})
@@ -533,7 +552,7 @@ class ListOrders(GenericAPIView):
         orders = handyman.order_set.all()
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data , status=status.HTTP_200_OK)
-    
+
 
 
 
@@ -546,7 +565,7 @@ class ListCalenderOrders(GenericAPIView):
         orders = Order.objects.filter(handy_man=handyman)
         serializer = OrderSerializer(many=True)
         return Response(serializer.data , status=status.HTTP_200_OK)
-    
+
 
 
 class ListReviews(ListAPIView):
@@ -566,7 +585,7 @@ class CreateReviewsView(GenericAPIView):
         review = Review.objects.create(user=request.user, handyman=handy_man, rating=request.data['rating'])
         serializer = self.get_serializer(review, many=False)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
 class GetReview(RetrieveAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
